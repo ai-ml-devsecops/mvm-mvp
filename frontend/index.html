@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Stripe Connect MVP</title>
+</head>
+<body>
+  <h1>Stripe Connect MVP</h1>
+  <button id="onboard">Onboard as Seller</button>
+  <button id="pay">Pay Seller</button>
+  <script>
+    let accountId = '';
+    document.getElementById('onboard').onclick = async () => {
+      const res = await fetch('http://localhost:4242/create-account-link', { method: 'POST' });
+      const data = await res.json();
+      if (data.url) window.location = data.url;
+    };
+    document.getElementById('pay').onclick = async () => {
+      accountId = prompt('Enter Connected Account ID:');
+      if (!accountId) return alert('Account ID required');
+      const res = await fetch('http://localhost:4242/pay', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accountId })
+      });
+      const data = await res.json();
+      if (data.clientSecret) alert('PaymentIntent created! Client secret: ' + data.clientSecret);
+      else alert('Error: ' + data.error);
+    };
+  </script>
+</body>
+</html>
