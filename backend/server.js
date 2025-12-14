@@ -10,6 +10,10 @@ app.use(cors());
 
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 
+app.get('/', (req, res) => {
+  res.send('<h1>Backend is running!</h1>');
+});
+
 // Endpoint to create a Connect account link (onboarding)
 app.post('/create-account-link', async (req, res) => {
   try {
@@ -31,7 +35,7 @@ app.post('/pay', async (req, res) => {
   try {
     const { accountId } = req.body;
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: 1000, // $10
+      amount: 10, // $10
       currency: 'usd',
       payment_method_types: ['card'],
       transfer_data: { destination: accountId },
