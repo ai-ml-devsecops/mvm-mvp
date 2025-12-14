@@ -3,15 +3,22 @@ const express = require('express');
 const Stripe = require('stripe');
 const cors = require('cors');
 require('dotenv').config();
+const path = require('path');
 
 const app = express();
 app.use(express.json());
 app.use(cors());
 
+// Serve frontend static files
+app.use(express.static(path.join(__dirname, '..', 'frontend')));
+
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 
 app.get('/', (req, res) => {
-  res.send('<h1>Backend is running!</h1>');
+  // res.send('<h1>Backend is running!</h1>');
+  // Serve the html file in /mvm-mvp/frontend/index.html
+  res.sendFile(path.join(__dirname, '..', 'frontend', 'index.html'));
+
 });
 
 // Endpoint to create a Connect account link (onboarding)
@@ -24,9 +31,24 @@ app.post('/create-account-link', async (req, res) => {
       return_url: 'http://localhost:3000',
       type: 'account_onboarding',
     });
-    res.json({ url: accountLink.url });
+    
+    // Log the created account and accountLink for inspection
+    console.log('Created Stripe account:', account);
+    console.log('Created Stripe accountLink:', accountLink);
+
+    // Return the link and the created objects for easier debugging in dev
+    res.json({ url: accountLink.url, account, accountLink });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    // Log error details for inspection
+    const stripeError = {
+      message: err && err.message,
+      type: err && err.type,
+      code: err && err.code,
+      statusCode: err && err.statusCode,
+      raw: err && err.raw,
+    };
+    console.error('Error creating account link:', stripeError);
+    res.status(500).json({ error: stripeError });
   }
 });
 
@@ -42,7 +64,15 @@ app.post('/pay', async (req, res) => {
     });
     res.json({ clientSecret: paymentIntent.client_secret });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    const stripeError = {
+      message: err && err.message,
+      type: err && err.type,
+      code: err && err.code,
+      statusCode: err && err.statusCode,
+      raw: err && err.raw,
+    };
+    console.error('Error creating payment intent:', stripeError);
+    res.status(500).json({ error: stripeError });
   }
 });
 
